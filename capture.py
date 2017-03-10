@@ -5,29 +5,25 @@ import matplotlib.animation as animation
 from matplotlib import style
 import cv2
 import math
-import time
 
-style.use('fivethirtyeight')
-mpl.rcParams['lines.linewidth'] = 2
 
-fig = plt.figure("Intensity")
-ax1 = fig.add_subplot(1, 1, 1)
+ax1 = None
+cap = None
+height = 0
+width = 0
+callback = None
+peak_orders = []
+y = 0
 
-# Open video feed and get initial frame
-cap = cv2.VideoCapture(0)
-ret, frame = cap.read()
-gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-# Get width and height of camera
-height, width = frame.shape[:2]
-
-# Select center y value
-y = int(math.floor(height / 2))
+def mouse_callback(event, ex, ey, flags, param):
+    global y
+    if event == cv2.EVENT_LBUTTONUP:
+        y = ey
 
 
 def animate(i):
     global width
-    global ret, frame, gray
 
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -38,16 +34,20 @@ def animate(i):
     # Display raw intensity value on the graph
     xs = np.arange(0, width, 1)
     ys = np.zeros(width)
-    for i in range(0, width - 2):
+    for i in range(0, width):
         ys[i] = float(gray[y][i]) / 255.0
         gray[y][i] = 255
-    s_w = 15
-    ys = smooth(ys, s_w)
-    ys = smooth(ys, s_w)
-    ys = smooth(ys, s_w)
-    ys = smooth(ys, s_w)
+    s_w = 25
+    for i in range(1, 3):
+        ys = smooth(ys, int(s_w / i))
+    ys = smooth(ys, 8)
 
-    peaks = get_d_peaks(ys, [1])
+    peaks = get_d_peaks(ys, peak_orders)
+    if callback is not None:
+        out_arr = []
+        for p in peaks:
+            out_arr.append((p, ys[p]))
+        callback(out_arr)
 
     ax1.clear()
     ax1.plot(xs, ys, '-o', markevery=peaks)
@@ -69,9 +69,11 @@ def sign(i):
 
 
 def smooth(arr, width):
+    if width <= 1:
+        return arr
     a_w = arr.size
     h_width = int(math.floor(width / 2))
-    for i in range(0, a_w - 1):
+    for i in range(0, a_w):
         avg = 0
         r_min = max(0, i - h_width)
         r_max = min(i + h_width, a_w - 1)
@@ -86,7 +88,7 @@ def get_d_peaks(arr, order, max_local=True):
     o_arr = []
     if isinstance(order, list):
         for i in range(0, len(order)):
-            o_arr = o_arr + get_d_peaks(arr, order[i], max_local)
+            o_arr += get_d_peaks(arr, order[i], max_local)
     else:
         a_w = arr.size
         slope = 0.0
@@ -102,7 +104,6 @@ def get_d_peaks(arr, order, max_local=True):
                 if sign(p_slope) < 0 < sign(slope):
                     o_arr.append(i)
             p_slope = slope
-    print(arr[width - 1])
     return o_arr
 
 
@@ -110,13 +111,42 @@ def derivative(arr, order, pos):
     if order == 0:
         return arr[pos]
     n_arr = []
-    for i in range(pos, pos + order):
+    for i in range(pos, pos + order + 1):
         n_arr.append(arr[i + 1] - arr[i])
     return derivative(n_arr, order - 1, 0)
 
-ani = animation.FuncAnimation(fig, animate, interval=30)
-plt.show()
 
-# When everything done, release the capture
-cap.release()
-cv2.destroyAllWindows()
+def retrieve_peaks(peak_callback, defined_peak_orders, defined_interval=50):
+    global ax1, cap, height, width, callback, peak_orders, y
+
+    callback = peak_callback
+    peak_orders = defined_peak_orders
+
+    style.use('fivethirtyeight')
+    mpl.rcParams['lines.linewidth'] = 2
+
+    fig = plt.figure("Intensity")
+    ax1 = fig.add_subplot(1, 1, 1)
+
+    # Open video feed and set mouse callback
+    cap = cv2.VideoCapture(0)
+    cv2.namedWindow("Intensity")
+    cv2.setMouseCallback("Intensity", mouse_callback)
+
+    # Get width and height of camera
+    ret, frame = cap.read()
+    height, width = frame.shape[:2]
+
+    # Select center y value
+    y = int(math.floor(height / 2))
+
+    ani = animation.FuncAnimation(fig, animate, interval=defined_interval)
+    plt.show()
+
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    retrieve_peaks(None, [1, 2])
