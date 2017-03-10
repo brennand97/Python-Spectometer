@@ -8,7 +8,7 @@ import math
 import time
 
 style.use('fivethirtyeight')
-mpl.rcParams['lines.linewidth'] = 5
+mpl.rcParams['lines.linewidth'] = 2
 
 fig = plt.figure("Intensity")
 ax1 = fig.add_subplot(1, 1, 1)
@@ -38,7 +38,7 @@ def animate(i):
     # Display raw intensity value on the graph
     xs = np.arange(0, width, 1)
     ys = np.zeros(width)
-    for i in range(0, width - 1):
+    for i in range(0, width - 2):
         ys[i] = float(gray[y][i]) / 255.0
         gray[y][i] = 255
     s_w = 15
@@ -47,7 +47,7 @@ def animate(i):
     ys = smooth(ys, s_w)
     ys = smooth(ys, s_w)
 
-    peaks = get_d1_peaks(ys, 1)
+    peaks = get_d_peaks(ys, [1])
 
     ax1.clear()
     ax1.plot(xs, ys, '-o', markevery=peaks)
@@ -82,18 +82,37 @@ def smooth(arr, width):
     return arr
 
 
-def get_d1_peaks(arr, delta):
+def get_d_peaks(arr, order, max_local=True):
     o_arr = []
-    a_w = arr.size
-    slope = 0.0
-    p_slope = (arr[delta] - arr[0])
-    for i in range(delta, a_w - delta - 1):
-        slope = (arr[i + delta] - arr[i])
-        if slope == 0 or sign(p_slope) > 0 > sign(slope):
-            o_arr.append(i)
-        p_slope = slope
-    print(o_arr)
+    if isinstance(order, list):
+        for i in range(0, len(order)):
+            o_arr = o_arr + get_d_peaks(arr, order[i], max_local)
+    else:
+        a_w = arr.size
+        slope = 0.0
+        p_slope = derivative(arr, order, 0)
+        for i in range(1, a_w - order - 1):
+            slope = derivative(arr, order, i)
+            if slope == 0:
+                o_arr.append(i)
+            elif max_local:
+                if sign(p_slope) > 0 > sign(slope):
+                    o_arr.append(i)
+            else:
+                if sign(p_slope) < 0 < sign(slope):
+                    o_arr.append(i)
+            p_slope = slope
+    print(arr[width - 1])
     return o_arr
+
+
+def derivative(arr, order, pos):
+    if order == 0:
+        return arr[pos]
+    n_arr = []
+    for i in range(pos, pos + order):
+        n_arr.append(arr[i + 1] - arr[i])
+    return derivative(n_arr, order - 1, 0)
 
 ani = animation.FuncAnimation(fig, animate, interval=30)
 plt.show()
