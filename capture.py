@@ -14,6 +14,7 @@ width = 0
 callback = None
 peak_orders = []
 y = 0
+g_windows = True
 
 
 def mouse_callback(event, ex, ey, flags, param):
@@ -49,14 +50,15 @@ def animate(i):
             out_arr.append((p, ys[p]))
         callback(out_arr)
 
-    ax1.clear()
-    ax1.plot(xs, ys, '-o', markevery=peaks)
+    if g_windows:
+        ax1.clear()
+        ax1.plot(xs, ys, '-o', markevery=peaks)
 
-    ax1.set_ylim([0, 1])
-    ax1.set_autoscale_on(False)
+        ax1.set_ylim([0, 1])
+        ax1.set_autoscale_on(False)
 
-    # Show camera image
-    cv2.imshow('Intensity', gray)
+        # Show camera image
+        cv2.imshow('Intensity', gray)
 
 
 def sign(i):
@@ -116,22 +118,25 @@ def derivative(arr, order, pos):
     return derivative(n_arr, order - 1, 0)
 
 
-def retrieve_peaks(peak_callback, defined_peak_orders, defined_interval=50):
-    global ax1, cap, height, width, callback, peak_orders, y
+def retrieve_peaks(peak_callback, defined_peak_orders, interval=50, windows=True):
+    global ax1, cap, height, width, callback, peak_orders, y, g_windows
 
     callback = peak_callback
     peak_orders = defined_peak_orders
+    g_windows = windows
 
-    style.use('fivethirtyeight')
-    mpl.rcParams['lines.linewidth'] = 2
+    if windows:
+        style.use('fivethirtyeight')
+        mpl.rcParams['lines.linewidth'] = 2
 
-    fig = plt.figure("Intensity")
-    ax1 = fig.add_subplot(1, 1, 1)
+        fig = plt.figure("Intensity")
+        ax1 = fig.add_subplot(1, 1, 1)
 
     # Open video feed and set mouse callback
     cap = cv2.VideoCapture(0)
-    cv2.namedWindow("Intensity")
-    cv2.setMouseCallback("Intensity", mouse_callback)
+    if windows:
+        cv2.namedWindow("Intensity")
+        cv2.setMouseCallback("Intensity", mouse_callback)
 
     # Get width and height of camera
     ret, frame = cap.read()
@@ -140,12 +145,16 @@ def retrieve_peaks(peak_callback, defined_peak_orders, defined_interval=50):
     # Select center y value
     y = int(math.floor(height / 2))
 
-    ani = animation.FuncAnimation(fig, animate, interval=defined_interval)
-    plt.show()
+    if windows:
+        ani = animation.FuncAnimation(fig, animate, interval=interval)
+        plt.show()
 
-    # When everything done, release the capture
-    cap.release()
-    cv2.destroyAllWindows()
+        # When everything done, release the capture
+        cap.release()
+        cv2.destroyAllWindows()
+    else:
+        while True:
+            animate(0)
 
 
 if __name__ == "__main__":
