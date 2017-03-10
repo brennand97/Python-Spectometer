@@ -13,14 +13,14 @@ height = 0
 width = 0
 callback = None
 peak_orders = []
-y = 0
+g_y = 0
 g_windows = True
 
 
 def mouse_callback(event, ex, ey, flags, param):
-    global y
+    global g_y
     if event == cv2.EVENT_LBUTTONUP:
-        y = ey
+        g_y = ey
 
 
 def animate(i):
@@ -36,8 +36,8 @@ def animate(i):
     xs = np.arange(0, width, 1)
     ys = np.zeros(width)
     for i in range(0, width):
-        ys[i] = float(gray[y][i]) / 255.0
-        gray[y][i] = 255
+        ys[i] = float(gray[g_y][i]) / 255.0
+        gray[g_y][i] = 255
     s_w = 25
     for i in range(1, 3):
         ys = smooth(ys, int(s_w / i))
@@ -118,14 +118,15 @@ def derivative(arr, order, pos):
     return derivative(n_arr, order - 1, 0)
 
 
-def retrieve_peaks(peak_callback, defined_peak_orders, interval=50, windows=True):
-    global ax1, cap, height, width, callback, peak_orders, y, g_windows
+def retrieve_peaks(peak_callback, defined_peak_orders, y=-1, interval=50, windows=True):
+    global ax1, cap, height, width, callback, peak_orders, g_y, g_windows
 
     callback = peak_callback
     peak_orders = defined_peak_orders
     g_windows = windows
 
     if windows:
+        # Set up matplotlib for windows
         style.use('fivethirtyeight')
         mpl.rcParams['lines.linewidth'] = 2
 
@@ -142,8 +143,12 @@ def retrieve_peaks(peak_callback, defined_peak_orders, interval=50, windows=True
     ret, frame = cap.read()
     height, width = frame.shape[:2]
 
-    # Select center y value
-    y = int(math.floor(height / 2))
+    if y > -1:
+        # Use user defined y value
+        g_y = y
+    else:
+        # Select center y value
+        g_y = int(math.floor(height / 2))
 
     if windows:
         ani = animation.FuncAnimation(fig, animate, interval=interval)
