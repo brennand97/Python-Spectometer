@@ -35,9 +35,11 @@ def animate(i):
     # Display raw intensity value on the graph
     xs = np.arange(0, width, 1)
     ys = np.zeros(width)
+    raw_ys = np.zeros(width)
     for i in range(0, width):
         ys[i] = float(gray[g_y][i]) / 255.0
-        gray[g_y][i] = 255
+        raw_ys[i] = float(gray[g_y][i]) / 255.0
+        frame[g_y][i] = 255
     s_w = 25
     for i in range(1, 3):
         ys = smooth(ys, int(s_w / i))
@@ -48,17 +50,18 @@ def animate(i):
         out_arr = []
         for p in peaks:
             out_arr.append((p, ys[p]))
-        callback(out_arr)
+        callback(out_arr, width)
 
     if g_windows:
         ax1.clear()
+        ax1.plot(xs, raw_ys)
         ax1.plot(xs, ys, '-o', markevery=peaks)
 
         ax1.set_ylim([0, 1])
         ax1.set_autoscale_on(False)
 
         # Show camera image
-        cv2.imshow('Intensity', gray)
+        cv2.imshow('Intensity', frame)
 
 
 def sign(i):
@@ -163,4 +166,4 @@ def retrieve_peaks(peak_callback, defined_peak_orders, y=-1, interval=50, window
 
 
 if __name__ == "__main__":
-    retrieve_peaks(None, [1, 2])
+    retrieve_peaks(None, [1])
