@@ -10,6 +10,7 @@ import math
 class Capture():
     def __init__(self, callback, peak_orders, y, interval, windows):
         self.ax1 = None
+        self.fig = None
         self.cap = None
         self.height = 0
         self.width = 0
@@ -17,14 +18,15 @@ class Capture():
         self.peak_orders = []
         self.g_y = 0
         self.g_windows = windows
+        self.interval = interval
 
         if windows:
             # Set up matplotlib for windows
             style.use('fivethirtyeight')
             mpl.rcParams['lines.linewidth'] = 2
 
-            fig = plt.figure("Intensity")
-            self.ax1 = fig.add_subplot(1, 1, 1)
+            self.fig = plt.figure("Intensity")
+            self.ax1 = self.fig.add_subplot(1, 1, 1)
 
         # Open video feed and set mouse callback
         self.cap = cv2.VideoCapture(0)
@@ -43,8 +45,9 @@ class Capture():
             # Select center y value
             self.g_y = int(math.floor(self.height / 2))
 
-        if windows:
-            ani = animation.FuncAnimation(fig, self.animate, interval=interval)
+    def run(self):
+        if self.g_windows:
+            ani = animation.FuncAnimation(self.fig, self.animate, interval=self.interval)
             plt.show()
 
             # When everything done, release the capture
@@ -156,6 +159,7 @@ def derivative(arr, order, pos):
 
 def retrieve_peaks(peak_callback, defined_peak_orders, y=-1, interval=50, windows=True):
     cap = Capture(peak_callback, defined_peak_orders, y, interval, windows)
+    cap.run();
 
 
 if __name__ == "__main__":
