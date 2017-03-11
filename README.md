@@ -1,7 +1,7 @@
 # Python-Spectometer
 A spectometer analyzer written in python
 
-To use include "capture_1-0" hand call the function ***retrieve_peaks(callback, peak_order)***.
+To use include "capture" hand call the function ***retrieve_peaks(callback, peak_order)***.
 
 ####Arguments
 
