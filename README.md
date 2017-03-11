@@ -1,5 +1,5 @@
 # Python-Spectometer
-A spectometer analyzer written in python
+A spectometer analyzer written in python.  Takes a webcam, designed for the Public Lab Spectrometer, then on a slected horizontal line measures the intensity of the diffracted light.  The raw data is then smoothed several times, atempting to make a balance between clean data and detailed data, from there the different derivative's local maximas are found, returned, and displayed on the intensity graph.
 
 ###Dependencies
 * Numpy
