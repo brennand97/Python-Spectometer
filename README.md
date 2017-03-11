@@ -9,7 +9,8 @@ To use include "capture_1-0" hand call the function retrieve_peaks(callback, pea
   - \<peaks\> is a list of tuples containing (\<x pixel-coord of peak\>, \<percent intensity value of peak\>)
   - \<width> is the width in pixels of the webcam
             
-* \<peak_order\>:   A list of derivative orders where the peaks will be obtained, e.g. **to find the maxium values it should be _[1]_**
+* \<peak_order\>:   A list of derivative orders where the peaks will be obtained.
+  - To find the maxium peak values it should be _[1]_
 
 ####Optional Arguments (kwargs)
 
