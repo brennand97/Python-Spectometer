@@ -1,6 +1,13 @@
 # Python-Spectometer
 A spectometer analyzer written in python
 
+###Dependencies
+* Numpy
+* Mathplotlib
+* OpenCV
+
+###Use
+
 To use include "capture" hand call the function ***retrieve_peaks(callback, peak_order)***.
 
 ####Arguments
