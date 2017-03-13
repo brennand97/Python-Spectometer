@@ -14,7 +14,7 @@ class Capture():
         self.cap = None
         self.height = 0
         self.width = 0
-        self.callback = None
+        self.callback = callback
         self.peak_orders = []
         self.g_y = 0
         self.g_windows = windows
